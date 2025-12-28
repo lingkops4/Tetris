@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Cyber Blue Tetris</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Cyber Blue Tetris</h1>
+      <div class="meta">
+        <div>Score: <span id="score">0</span></div>
+        <div>Level: <span id="level">1</span></div>
+        <div>Lines: <span id="lines">0</span></div>
+      </div>
+    </header>
+
+    <main>
+      <div class="board-panel">
+        <canvas id="board" width="300" height="600"></canvas>
+      </div>
+
+      <aside class="side">
+        <div class="box">
+          <h3>Next</h3>
+          <canvas id="next" width="140" height="140"></canvas>
+        </div>
+        <div class="box">
+          <h3>Hold</h3>
+          <canvas id="hold" width="140" height="140"></canvas>
+        </div>
+        <div class="box">
+          <h3>Controls</h3>
+          <ul class="controls">
+            <li>← → : Move</li>
+            <li>↑ / X : Rotate</li>
+            <li>Z : Rotate CCW</li>
+            <li>↓ : Soft drop</li>
+            <li>Space : Hard drop</li>
+            <li>Shift / C : Hold</li>
+            <li>R : Restart</li>
+          </ul>
+        </div>
+        <div class="box">
+          <button id="startBtn" class="neon">Start / Resume</button>
+          <button id="pauseBtn" class="neon">Pause</button>
+          <button id="restartBtn" class="neon">Restart</button>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      <p>Made with neon blue vibes ✨ — 按 R 重新開始</p>
+    </footer>
+  </div>
+
+  <script src="tetris.js"></script>
+</body>
+</html>
