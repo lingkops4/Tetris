@@ -45,6 +45,7 @@ header{
   gap:12px;
   margin-bottom:12px;
 }
+.brand{display:flex;align-items:baseline;gap:10px}
 h1{
   margin:0;
   font-size:20px;
@@ -52,14 +53,51 @@ h1{
   color:var(--neon);
   text-shadow: 0 0 8px rgba(45,209,255,0.25), 0 0 20px rgba(26,157,255,0.12);
 }
+.tagline{
+  color: #9ff3ff;
+  font-weight:800;
+  letter-spacing:2px;
+  font-size:14px;
+  text-transform:uppercase;
+  text-shadow: 0 0 8px rgba(26,157,255,0.06);
+  transform: skewX(-8deg);
+  padding:4px 8px;
+  border-radius:8px;
+  border:1px solid rgba(45,209,255,0.06);
+  background: linear-gradient(90deg, rgba(43,209,255,0.03), rgba(26,157,255,0.02));
+}
 
 .meta{display:flex;gap:14px;font-size:14px;align-items:center}
 .meta div{background:var(--panel);padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)}
 
 main{display:flex;gap:18px;align-items:flex-start}
-.board-panel{padding:10px;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));border-radius:8px;border:1px solid rgba(255,255,255,0.03)}
+.board-panel{
+  padding:10px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.008));
+  border-radius:8px;border:1px solid rgba(255,255,255,0.03);
+  position:relative;
+  overflow:hidden;
+}
 #board{background:linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.1));display:block;border-radius:6px;box-shadow: inset 0 0 40px rgba(10,30,50,0.6);}
 
+/* watermark / logo over board */
+.watermark{
+  position:absolute;
+  top:40%;
+  left:50%;
+  transform:translate(-50%,-50%) rotate(-12deg);
+  font-size:68px;
+  color: rgba(40,230,255,0.06);
+  font-weight:900;
+  letter-spacing:8px;
+  pointer-events:none;
+  text-transform:uppercase;
+  mix-blend-mode:overlay;
+  text-shadow: 0 0 32px rgba(45,209,255,0.06), 0 0 80px rgba(26,157,255,0.03);
+  user-select:none;
+}
+
+/* side */
 .side{width:260px;display:flex;flex-direction:column;gap:12px}
 .box{background:var(--glass);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03)}
 .box h3{margin:0 0 8px 0;color:var(--accent);font-size:14px}
@@ -68,6 +106,11 @@ canvas{display:block;background:transparent;border-radius:6px}
 .controls{padding-left:18px;margin:0;font-size:13px}
 .controls li{margin-bottom:6px}
 
+/* music controls */
+.music-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.music-note{font-size:12px;color:rgba(207,238,253,0.55)}
+
+/* neon buttons */
 .neon{
   margin-top:6px;
   background: linear-gradient(90deg, rgba(43,209,255,0.12), rgba(26,157,255,0.08));
@@ -76,6 +119,15 @@ canvas{display:block;background:transparent;border-radius:6px}
   padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;
   box-shadow: 0 6px 14px rgba(10,30,50,0.6), 0 0 22px rgba(26,157,255,0.05);
 }
+.neon.small{padding:6px 8px;font-size:13px}
 .neon:hover{filter:brightness(1.05)}
 
 footer{margin-top:12px;text-align:center;color:rgba(207,238,253,0.5);font-size:13px}
+
+/* responsive tweak */
+@media (max-width:980px){
+  .wrap{padding:12px}
+  main{flex-direction:column;align-items:center}
+  .side{width:100%}
+  .board-panel{width:100%}
+}

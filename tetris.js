@@ -1,5 +1,5 @@
-// Cyber Blue Tetris
-// 簡潔但完整的俄羅斯方塊實作，使用 canvas 繪製並有 next/hold、等級、分數、硬降等功能
+// Cyber Blue Tetris (with lingko logo + BGM preloaded demo)
+// 已預設一個公開示範 mp3（可替換），會在 Start 時可播放（瀏覽器自動播放限制可能需要手動按 Play 或 Start）
 
 (() => {
   // constants
@@ -40,6 +40,14 @@
   const pauseBtn = document.getElementById('pauseBtn');
   const restartBtn = document.getElementById('restartBtn');
 
+  // music UI
+  const bgm = document.getElementById('bgm');
+  const bgmFile = document.getElementById('bgmFile');
+  const playBgm = document.getElementById('playBgm');
+  const pauseBgm = document.getElementById('pauseBgm');
+  const bgmVol = document.getElementById('bgmVol');
+  const muteBgm = document.getElementById('muteBgm');
+
   // state
   let grid, current, nextQueue, holdPiece, canHold;
   let score = 0, level = 1, lines = 0;
@@ -48,11 +56,29 @@
   let running = false;
   let gameOver = false;
   let animationId = null;
+  let isMuted = false;
+  let hasBgm = false;
+
+  // If you want to replace demo BGM, change this URL to another public mp3
+  const DEMO_BGM_URL = 'https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3';
+
+  // preload demo bgm
+  try {
+    if(!bgm.src) {
+      bgm.src = DEMO_BGM_URL;
+      hasBgm = true;
+      bgm.volume = parseFloat(bgmVol.value || 0.8);
+      // do not force play (browsers may block until interaction)
+    } else {
+      hasBgm = true;
+    }
+  } catch(e) {
+    console.warn('BGM preload failed', e);
+  }
 
   // Utility
   function cloneMatrix(m){ return m.map(r => r.slice()); }
   function rotate(matrix, dir=1){
-    // transpose + reverse rows/cols. dir=1 cw, -1 ccw
     const N = matrix.length;
     const res = Array.from({length: N}, ()=>Array(N).fill(0));
     for(let r=0;r<N;r++) for(let c=0;c<N;c++){
@@ -78,15 +104,13 @@
 
   function spawnPiece(){
     const type = nextQueue.shift() || bag.next().value;
-    // ensure queue length >= 5
     while(nextQueue.length < 5) nextQueue.push(bag.next().value);
     const shape = SHAPES[type];
-    // convert shape to square matrix for easier rotation
     const size = Math.max(shape.length, shape[0].length);
     const matrix = Array.from({length:size}, ()=>Array(size).fill(0));
     for(let r=0;r<shape.length;r++) for(let c=0;c<shape[r].length;c++) if(shape[r][c]) matrix[r][c] = type;
     const x = Math.floor((COLS - size)/2);
-    const y = -size + 1; // start above board slightly
+    const y = -size + 1;
     return {type, matrix, x, y, size};
   }
 
@@ -120,7 +144,7 @@
         grid.splice(r,1);
         grid.unshift(Array(COLS).fill(0));
         cleared++;
-        r++; // re-evaluate same row index
+        r++;
       }
     }
     if(cleared>0){
@@ -146,7 +170,6 @@
       ctx.strokeStyle = 'rgba(255,255,255,0.06)';
       ctx.stroke();
     }
-    // inner glossy highlight
     const grad = ctx.createLinearGradient(x, y, x+size, y+size);
     grad.addColorStop(0, 'rgba(255,255,255,0.06)');
     grad.addColorStop(1, 'rgba(255,255,255,0.00)');
@@ -169,14 +192,12 @@
 
   function drawGrid(){
     bCtx.clearRect(0,0, boardCanvas.width, boardCanvas.height);
-    // background grid lines subtle
     bCtx.save();
     bCtx.fillStyle = 'rgba(2,10,20,0.35)';
     roundRect(bCtx, 0, 0, COLS*BLOCK, ROWS*BLOCK, 6);
     bCtx.fill();
     bCtx.restore();
 
-    // draw placed blocks
     for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
       const cell = grid[r][c];
       if(cell){
@@ -188,7 +209,6 @@
       }
     }
 
-    // draw current piece
     if(current){
       const {matrix, x, y, type} = current;
       for(let r=0;r<matrix.length;r++) for(let c=0;c<matrix[r].length;c++){
@@ -202,7 +222,6 @@
             drawCell(bCtx, 0, 0, BLOCK, color);
             bCtx.restore();
           } else {
-            // preview for above-board cells (draw faint)
             const color = COLORS[type];
             bCtx.save();
             bCtx.globalAlpha = 0.45;
@@ -214,7 +233,6 @@
       }
     }
 
-    // grid lines
     bCtx.save();
     bCtx.strokeStyle = 'rgba(255,255,255,0.03)';
     bCtx.lineWidth = 1;
@@ -235,10 +253,6 @@
 
   function drawMini(ctx, piece, cellSize=28){
     ctx.clearRect(0,0, ctx.canvas.width, ctx.canvas.height);
-    ctx.save();
-    ctx.fillStyle = 'transparent';
-    ctx.fillRect(0,0,ctx.canvas.width,ctx.canvas.height);
-    ctx.restore();
     if(!piece) return;
     const size = piece.matrix.length;
     const totalW = size*cellSize;
@@ -281,7 +295,6 @@
     if(!current) return;
     const newMatrix = rotate(current.matrix, dir);
     const oldX = current.x;
-    // attempt wall kicks (basic: try shifts -1, +1, -2, +2)
     const kicks = [0, -1, 1, -2, 2];
     for(const k of kicks){
       const test = {...current, matrix:newMatrix, x: oldX + k};
@@ -300,11 +313,12 @@
     current = spawnPiece();
     canHold = true;
     if(collide(grid, current, 0, 0)){
-      // game over
       running = false;
       gameOver = true;
       cancelAnimationFrame(animationId);
       showGameOver();
+      // pause music on game over
+      tryPauseBgm();
     }
   }
 
@@ -316,12 +330,12 @@
     } else {
       const tmp = {type: holdPiece.type, matrix: cloneMatrix(holdPiece.matrix), size: holdPiece.size};
       holdPiece = {type: current.type, matrix: cloneMatrix(current.matrix), size: current.size};
-      // spawn tmp as current but center x
       current = tmp;
       current.x = Math.floor((COLS - current.matrix.length)/2);
       current.y = -current.matrix.length + 1;
       if(collide(grid, current)) {
         running = false; gameOver = true; cancelAnimationFrame(animationId); showGameOver();
+        tryPauseBgm();
       }
     }
     canHold = false;
@@ -346,11 +360,12 @@
     scoreEl.textContent = score;
     levelEl.textContent = level;
     linesEl.textContent = lines;
-    drawMini(nCtx, {type: nextQueue[0], matrix: (() => {
-      const shape = SHAPES[nextQueue[0]];
+    const nextType = nextQueue[0];
+    drawMini(nCtx, {type: nextType, matrix: (() => {
+      const shape = SHAPES[nextType];
       const size = Math.max(shape.length, shape[0].length);
       const matrix = Array.from({length:size}, ()=>Array(size).fill(0));
-      for(let r=0;r<shape.length;r++) for(let c=0;c<shape[r].length;c++) if(shape[r][c]) matrix[r][c] = nextQueue[0];
+      for(let r=0;r<shape.length;r++) for(let c=0;c<shape[r].length;c++) if(shape[r][c]) matrix[r][c] = nextType;
       return matrix;
     })()});
     drawMini(hCtx, holdPiece);
@@ -399,7 +414,6 @@
   }
 
   // keyboard
-  const keys = {};
   window.addEventListener('keydown', (e)=>{
     if(e.repeat) return;
     const key = e.key.toLowerCase();
@@ -411,7 +425,58 @@
     else if(key === 'z'){ rotatePiece(-1); drawGrid(); }
     else if(key === 'shift' || key === 'c'){ hold(); updateUI(); drawGrid(); }
     else if(key === 'r'){ init(); start(); }
+    else if(key === 'm'){ toggleMute(); }
   });
+
+  // music file load
+  bgmFile.addEventListener('change', (e)=>{
+    const f = bgmFile.files && bgmFile.files[0];
+    if(f){
+      try {
+        const url = URL.createObjectURL(f);
+        bgm.src = url;
+        hasBgm = true;
+        bgm.volume = parseFloat(bgmVol.value || 0.8);
+        bgm.play().catch(()=>{/* autoplay blocked until user interacts */});
+      } catch(err){
+        console.error('Failed to load BGM', err);
+      }
+    }
+  });
+
+  playBgm.addEventListener('click', ()=>{
+    if(!hasBgm && !bgm.src){
+      return;
+    }
+    bgm.volume = parseFloat(bgmVol.value || 0.8);
+    bgm.play().catch(()=>{/* blocked */});
+  });
+  pauseBgm.addEventListener('click', ()=> bgm.pause());
+
+  bgmVol.addEventListener('input', ()=> {
+    bgm.volume = parseFloat(bgmVol.value);
+  });
+
+  muteBgm.addEventListener('click', toggleMute);
+
+  function toggleMute(){
+    isMuted = !isMuted;
+    bgm.muted = isMuted;
+    muteBgm.textContent = isMuted ? 'Unmute (M)' : 'Mute (M)';
+  }
+
+  function tryPlayBgm(){
+    if(hasBgm && !bgm.paused && !bgm.ended) return;
+    if(hasBgm && !isMuted){
+      bgm.volume = parseFloat(bgmVol.value || 0.8);
+      bgm.play().catch(()=>{/* blocked */});
+    }
+  }
+  function tryPauseBgm(){
+    if(hasBgm){
+      bgm.pause();
+    }
+  }
 
   // mouse / buttons
   startBtn.addEventListener('click', ()=>{ start(); });
@@ -424,12 +489,14 @@
       running = true;
       lastDrop = 0;
       animationId = requestAnimationFrame(update);
+      tryPlayBgm();
     }
   }
   function pause(){
     if(running){
       running = false;
       cancelAnimationFrame(animationId);
+      tryPauseBgm();
     }
   }
 
