@@ -3,13 +3,16 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Cyber Blue Tetris</title>
+  <title>Cyber Blue Tetris — lingko</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Cyber Blue Tetris</h1>
+      <div class="brand">
+        <h1>Cyber Blue Tetris</h1>
+        <div class="tagline">lingko</div>
+      </div>
       <div class="meta">
         <div>Score: <span id="score">0</span></div>
         <div>Level: <span id="level">1</span></div>
@@ -20,6 +23,9 @@
     <main>
       <div class="board-panel">
         <canvas id="board" width="300" height="600"></canvas>
+
+        <!-- neon watermark -->
+        <div class="watermark">lingko</div>
       </div>
 
       <aside class="side">
@@ -31,6 +37,22 @@
           <h3>Hold</h3>
           <canvas id="hold" width="140" height="140"></canvas>
         </div>
+
+        <div class="box">
+          <h3>Music</h3>
+          <div class="music-row">
+            <input id="bgmFile" type="file" accept="audio/*" />
+            <button id="playBgm" class="neon small">Play</button>
+            <button id="pauseBgm" class="neon small">Pause</button>
+          </div>
+          <div class="music-row">
+            <label>Vol</label>
+            <input id="bgmVol" type="range" min="0" max="1" step="0.01" value="0.8" />
+            <button id="muteBgm" class="neon small">Mute (M)</button>
+          </div>
+          <div class="music-note">Tip: 選擇本機 mp3 或使用預設示範音樂。</div>
+        </div>
+
         <div class="box">
           <h3>Controls</h3>
           <ul class="controls">
@@ -41,8 +63,10 @@
             <li>Space : Hard drop</li>
             <li>Shift / C : Hold</li>
             <li>R : Restart</li>
+            <li>M : Mute / Unmute</li>
           </ul>
         </div>
+
         <div class="box">
           <button id="startBtn" class="neon">Start / Resume</button>
           <button id="pauseBtn" class="neon">Pause</button>
@@ -52,9 +76,12 @@
     </main>
 
     <footer>
-      <p>Made with neon blue vibes ✨ — 按 R 重新開始</p>
+      <p>Made with neon blue vibes ✨ — 按 R 重新開始 — lingko</p>
     </footer>
   </div>
+
+  <!-- audio element (預設載入示範音樂，可替換) -->
+  <audio id="bgm" loop preload="auto" src="https://file-examples.com/wp-content/uploads/2017/11/file_example_MP3_700KB.mp3"></audio>
 
   <script src="tetris.js"></script>
 </body>
